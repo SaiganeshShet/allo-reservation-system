@@ -1,158 +1,226 @@
-Allo Reservation System
 
-A full-stack inventory reservation system built with Next.js App Router, TypeScript, Prisma, and Supabase PostgreSQL for managing product reservations across multiple warehouses.
+# Allo Reservation System
 
-This project was built as part of the Allo Engineering Take-Home Exercise.
+A modern inventory and reservation management system built using Next.js, Prisma, PostgreSQL, and Tailwind CSS.
 
-Features
-Multi-warehouse inventory management
-Product stock tracking
-Reservation lifecycle management
-Reservation expiry handling
-Real-time stock updates
-Modern responsive UI
-Concurrency-safe reservation logic using Prisma transactions
-Dynamic API routes with Next.js App Router
-Tech Stack
-Next.js 16 (App Router)
-TypeScript
-Prisma ORM
-Supabase PostgreSQL
-Tailwind CSS
-Thunder Client (API testing)
-Database Models
+---
 
-The application includes the following models:
+# Features
 
-Product
-Warehouse
-Inventory
-Reservation
+## Core Features
 
-Reservation statuses:
+* Product Management
+* Warehouse Management
+* Inventory Tracking
+* Reservation Creation
+* Reservation Confirmation
+* Reservation Release
+* Reservation Expiry Handling
+* Reserved Stock Management
+* Real-time Inventory Updates
 
-PENDING
-CONFIRMED
-RELEASED
-EXPIRED
-API Endpoints
-Products
+---
+
+# Tech Stack
+
+## Frontend
+
+* Next.js 16
+* React
+* Tailwind CSS
+
+## Backend
+
+* Next.js API Routes
+* Prisma ORM
+* PostgreSQL
+
+## Database
+
+* PostgreSQL (Supabase)
+
+---
+
+# Database Schema
+
+## Models
+
+### Product
+
+Stores product details.
+
+### Warehouse
+
+Stores warehouse information.
+
+### Inventory
+
+Maintains stock availability across warehouses.
+
+### Reservation
+
+Handles reservation lifecycle and statuses.
+
+---
+
+# Reservation Lifecycle
+
+A reservation can move through the following states:
+
+```txt
+PENDING → CONFIRMED
+PENDING → RELEASED
+PENDING → EXPIRED
+```
+
+---
+
+# API Endpoints
+
+## Products
+
+### Get Products
+
+```http
 GET /api/products
+```
 
-Returns all products.
+---
 
-Warehouses
+## Warehouses
+
+### Get Warehouses
+
+```http
 GET /api/warehouses
+```
 
-Returns all warehouses.
+---
 
-Inventory
+## Inventory
+
+### Get Inventory
+
+```http
 GET /api/inventory
+```
 
-Returns inventory details with:
+---
 
-product info
-warehouse info
-available stock
-Reservations
+## Reservations
+
+### Get Reservations
+
+```http
 GET /api/reservations
+```
 
-Returns all reservations.
+### Create Reservation
 
+```http
 POST /api/reservations
+```
 
-Creates a reservation.
+### Sample Request
 
-Request Body
+```json
 {
   "productId": "PRODUCT_ID",
   "warehouseId": "WAREHOUSE_ID",
   "quantity": 1
 }
-Responses
-200 → Reservation created
-409 → Insufficient stock
-400 → Validation error
-Confirm Reservation
-POST /api/reservations/[id]/confirm
+```
 
-Confirms a reservation after payment success.
+---
 
-Responses
-200 → Reservation confirmed
-410 → Reservation expired
-Release Reservation
-POST /api/reservations/[id]/release
+## Confirm Reservation
 
-Releases reserved stock when payment fails or user cancels.
+```http
+PATCH /api/reservations/[id]/confirm
+```
 
-Expire Reservations
+---
+
+## Release Reservation
+
+```http
+PATCH /api/reservations/[id]/release
+```
+
+---
+
+## Expire Reservations
+
+```http
 POST /api/reservations/expire
+```
 
-Automatically expires old pending reservations and restores stock.
+---
 
-Concurrency Handling
+# Business Logic
 
-The reservation flow is protected using Prisma database transactions.
+## Reservation Creation
 
-Inside the transaction:
+When a reservation is created:
 
-Inventory row is fetched
-Available stock is calculated
-Stock validation happens
-Reserved stock is incremented
-Reservation is created
+* Inventory availability is checked.
+* Reserved stock is increased.
+* Reservation is created with `PENDING` status.
+* Expiration timestamp is generated.
 
-This ensures that if multiple users attempt to reserve the last unit simultaneously, only one reservation succeeds while others fail safely.
+---
 
-Reservation Expiry Mechanism
+## Reservation Confirmation
 
-An expiry endpoint is implemented:
+When confirmed:
 
-POST /api/reservations/expire
+* Reservation status changes to `CONFIRMED`.
+* Reserved stock remains locked.
 
-The endpoint:
+---
 
-finds expired pending reservations
-marks them as EXPIRED
-restores reserved stock back to inventory
+## Reservation Release
 
-In production, this endpoint can be triggered using:
+When released:
 
-Vercel Cron Jobs
-Background Workers
-Scheduled server jobs
-Frontend Features
-Product listing dashboard
-Warehouse inventory display
-Available stock calculation
-Reservation cards
-Reservation status badges
-Confirm / Release buttons
-Responsive modern UI
-Automatic UI refresh after actions
-Running Locally
-1. Clone Repository
-git clone YOUR_GITHUB_REPO_URL
-cd allo-reservation-system
-2. Install Dependencies
-npm install
-3. Configure Environment Variables
+* Reservation status changes to `RELEASED`.
+* Reserved stock is reduced.
 
-Create .env
+---
 
-DATABASE_URL="postgresql://postgres.ptxqiynlhjntmxfrkayd:FCRr8OAhfe3j04a4@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
-4. Run Prisma Migration
-npx prisma migrate dev
-5. Seed Database
-npx prisma db seed
-6. Start Development Server
-npm run dev
+## Reservation Expiry
 
-Open:
+Expired reservations:
 
-http://localhost:3000
-Project Structure
+* Automatically become `EXPIRED`
+* Reserved stock is restored
+
+---
+
+# Transaction Handling
+
+Prisma transactions are used to:
+
+* Prevent inconsistent inventory updates
+* Ensure stock accuracy
+* Avoid race conditions
+
+---
+
+# UI Features
+
+* Modern responsive dashboard
+* Product cards
+* Warehouse cards
+* Inventory availability display
+* Reservation status badges
+* Action buttons for reservation management
+
+---
+
+# Project Structure
+
+```txt
 src/
  ├── app/
  │   ├── api/
@@ -160,29 +228,116 @@ src/
  │   │   ├── warehouses/
  │   │   ├── inventory/
  │   │   └── reservations/
- │   ├── layout.tsx
+ │   ├── components/
  │   └── page.tsx
  │
-prisma/
- ├── schema.prisma
- └── seed.ts
-Trade-offs & Improvements
+ ├── prisma/
+ │   ├── schema.prisma
+ │   └── seed.ts
+```
 
-Due to time constraints, the following improvements can be added later:
+---
 
-Idempotency support
-Authentication
-Redis distributed locking
-Optimistic UI updates
-Pagination
-Search & filtering
-WebSocket real-time updates
-Better loading/error states
-Unit & integration tests
-Notes
-Hosted PostgreSQL database used via Supabase as required in the assignment.
-App Router architecture implemented using Next.js.
-Reservation expiry handling implemented according to assignment requirements.
-Author
+# Setup Instructions
+
+## 1. Clone Repository
+
+```bash
+git clone <your-repo-url>
+cd allo-reservation-system
+```
+
+---
+
+## 2. Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+## 3. Configure Environment Variables
+
+Create `.env` file:
+
+```env
+DATABASE_URL="postgresql://postgres.ptxqiynlhjntmxfrkayd:FCRr8OAhfe3j04a4@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
+```
+
+---
+
+## 4. Run Prisma Migration
+
+```bash
+npx prisma migrate dev
+```
+
+---
+
+## 5. Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+---
+
+## 6. Seed Database
+
+```bash
+npx ts-node prisma/seed.ts
+```
+
+---
+
+## 7. Run Development Server
+
+```bash
+npm run dev
+```
+
+---
+
+# Assumptions
+
+* Reservations are warehouse-specific.
+* Inventory is managed independently per warehouse.
+* Reserved stock cannot exceed available stock.
+* Expired reservations restore inventory.
+
+---
+
+# Future Improvements
+
+* Authentication & Authorization
+* Real-time updates with WebSockets
+* Automated cron-based expiry handling
+* Search and filtering
+* Reservation analytics dashboard
+* Unit and integration testing
+* Docker deployment
+
+---
+
+# Challenges Faced
+
+* Prisma schema synchronization
+* Transaction consistency
+* Reservation lifecycle handling
+* Client vs Server Component handling in Next.js
+* Dynamic API route implementation
+
+---
+
+
+
+# Author
 
 Saiganesh Shet
+
+---
+
+# Submission Notes
+
+This project was developed as part of the Allo Health Engineering Take-Home Exercise.
