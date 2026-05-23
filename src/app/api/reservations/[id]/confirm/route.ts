@@ -24,9 +24,13 @@ export async function POST(
         throw new Error("Reservation not found");
       }
 
-      if (reservation.status !== "CONFIRMED") {
-        throw new Error("Reservation already processed");
-      }
+      if (reservation.status !== "PENDING") {
+  throw new Error(
+    "Only pending reservations can be confirmed"
+  );
+}
+
+  
 
       if (new Date() > reservation.expiresAt) {
 
@@ -82,7 +86,7 @@ export async function POST(
             id,
           },
           data: {
-            status: "PURCHASED",
+            status: "CONFIRMED",
           },
         });
 
