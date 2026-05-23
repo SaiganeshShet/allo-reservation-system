@@ -1,8 +1,9 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 async function fetchData(endpoint: string) {
   try {
-    const res = await fetch(`http://localhost:3000${endpoint}`, {
+    const res = await fetch(endpoint, {
       cache: "no-store",
     });
 
